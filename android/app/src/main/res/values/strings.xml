@@ -50,4 +50,26 @@
     <string name="notif_waiting_title">已暂停，等待下次播放</string>
     <string name="notif_waiting_content">连续定时运行中，再次播放时会重新计时。点按可取消</string>
     <string name="notif_btn_exit">退出程序</string>
+
+    <!-- 自动关闭应用 -->
+    <string name="switch_auto_exit">自动关闭应用</string>
+    <string name="auto_exit_desc">开关打开后持续生效：到点彻底关闭本应用（停止全部服务、移除通知并结束进程），不需要再去通知里长按退出。固定时间每天重复，几小时后每 N 小时重复，只有手动关掉开关才停止。</string>
+    <string name="auto_exit_mode_hours">几小时后</string>
+    <string name="auto_exit_mode_fixed">固定时间</string>
+    <string name="auto_exit_hours_hint">小时数（可填小数，如 1.5 = 1 小时 30 分）</string>
+    <string name="auto_exit_quick_1">1 小时</string>
+    <string name="auto_exit_quick_2">2 小时</string>
+    <string name="auto_exit_quick_4">4 小时</string>
+    <string name="auto_exit_quick_8">8 小时</string>
+    <string name="auto_exit_fixed_hint">每天到点自动关闭；若该时刻已过则从明天开始</string>
+    <string name="auto_exit_status_off">已关闭，打开开关即可生效</string>
+    <string name="auto_exit_status_daily">每天 %1$s 自动关闭（下次：%2$s %3$s，剩余 %4$s）</string>
+    <string name="auto_exit_status_interval">每 %1$s 小时自动关闭一次（剩余 %2$s）</string>
+    <string name="auto_exit_status_invalid_hours">小时数无效（需大于 0 且不超过 720），已停止排程</string>
+    <string name="auto_exit_day_today">今天</string>
+    <string name="auto_exit_day_tomorrow">明天</string>
+    <string name="auto_exit_day_md">%1$d月%2$d日</string>
+    <string name="toast_auto_exit_on">已开启自动关闭</string>
+    <string name="toast_auto_exit_off">已关闭自动关闭</string>
+    <string name="invalid_hours">请输入大于 0 且不超过 720 的小时数</string>
 </resources>

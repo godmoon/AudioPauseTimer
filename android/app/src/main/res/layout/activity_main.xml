@@ -177,6 +177,160 @@
                 android:textSize="12sp" />
         </LinearLayout>
 
+        <!-- 卡片：自动关闭应用 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:background="@drawable/bg_card"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <!-- 总开关：打开才会有下面的选项，关掉就取消排程 -->
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/switch_auto_exit"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:checked="false"
+                android:minHeight="36dp"
+                android:text="@string/switch_auto_exit"
+                android:textColor="@color/text_primary"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:lineSpacingExtra="2dp"
+                android:text="@string/auto_exit_desc"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp" />
+
+            <RadioGroup
+                android:id="@+id/rg_exit_mode"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:orientation="horizontal">
+
+                <RadioButton
+                    android:id="@+id/rb_exit_hours"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:buttonTint="@color/accent"
+                    android:checked="true"
+                    android:minHeight="32dp"
+                    android:text="@string/auto_exit_mode_hours"
+                    android:textColor="@color/text_primary"
+                    android:textSize="14sp" />
+
+                <RadioButton
+                    android:id="@+id/rb_exit_fixed"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:buttonTint="@color/accent"
+                    android:minHeight="32dp"
+                    android:text="@string/auto_exit_mode_fixed"
+                    android:textColor="@color/text_primary"
+                    android:textSize="14sp" />
+            </RadioGroup>
+
+            <!-- 模式一：几小时后关闭 -->
+            <LinearLayout
+                android:id="@+id/row_exit_hours"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:orientation="vertical">
+
+                <EditText
+                    android:id="@+id/et_exit_hours"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_chip"
+                    android:hint="@string/auto_exit_hours_hint"
+                    android:inputType="numberDecimal"
+                    android:padding="12dp"
+                    android:singleLine="true"
+                    android:textColor="@color/text_primary"
+                    android:textColorHint="@color/text_secondary"
+                    android:textSize="16sp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:baselineAligned="false"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/btn_exit_quick_1"
+                        style="@style/ChipButton"
+                        android:layout_marginEnd="4dp"
+                        android:text="@string/auto_exit_quick_1" />
+
+                    <TextView
+                        android:id="@+id/btn_exit_quick_2"
+                        style="@style/ChipButton"
+                        android:layout_marginEnd="4dp"
+                        android:text="@string/auto_exit_quick_2" />
+
+                    <TextView
+                        android:id="@+id/btn_exit_quick_4"
+                        style="@style/ChipButton"
+                        android:layout_marginEnd="4dp"
+                        android:text="@string/auto_exit_quick_4" />
+
+                    <TextView
+                        android:id="@+id/btn_exit_quick_8"
+                        style="@style/ChipButton"
+                        android:text="@string/auto_exit_quick_8" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- 模式二：固定时间关闭 -->
+            <LinearLayout
+                android:id="@+id/row_exit_fixed"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <TextView
+                    android:id="@+id/btn_pick_time"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_button_outline"
+                    android:gravity="center"
+                    android:padding="12dp"
+                    android:text="23:00"
+                    android:textColor="@color/text_primary"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="@string/auto_exit_fixed_hint"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/tv_auto_exit_status"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="@string/auto_exit_status_off"
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp" />
+        </LinearLayout>
+
         <!-- 卡片：权限状态 -->
         <LinearLayout
             android:layout_width="match_parent"

@@ -19,6 +19,9 @@
     <!-- 到点时唤醒 CPU 执行暂停操作 -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
+    <!-- 开机后重新排上「自动关闭应用」的闹钟（重启会清空系统里的所有闹钟） -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
     <!-- 允许引导用户把本应用加入电池优化白名单。
          MIUI/HyperOS 的 greeze 会冻结第三方应用并禁用其唤醒锁，导致熄屏后无法准点执行暂停，
          只有加入白名单后系统才不会冻结进程。 -->
@@ -67,6 +70,20 @@
                 <action android:name="android.service.notification.NotificationListenerService" />
             </intent-filter>
         </service>
+
+        <!-- 自动关闭闹钟的到点入口：闹钟由本应用自己创建并显式指名，不需要对外导出 -->
+        <receiver
+            android:name=".AutoExitReceiver"
+            android:exported="false" />
+
+        <!-- 开机后重排自动关闭闹钟，系统广播必须对外导出才能收到 -->
+        <receiver
+            android:name=".BootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>
