@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">音频暂停定时器</string>
+
+    <string name="title_main">音频暂停定时器</string>
+    <string name="hint_duration">设定倒计时（分钟）</string>
+    <string name="btn_start">开始倒计时</string>
+    <string name="btn_cancel">取消倒计时</string>
+    <string name="status_idle">未开始倒计时</string>
+    <string name="status_running">倒计时进行中</string>
+    <string name="status_done">已到时间，音频已暂停</string>
+    <string name="status_cancelled">倒计时已取消</string>
+    <string name="label_permission">权限状态</string>
+    <string name="perm_listener_ok">✓ 通知使用权已开启</string>
+    <string name="perm_listener_missing">✗ 未开启通知使用权，无法暂停其它应用的音频</string>
+    <string name="perm_notify_ok">✓ 通知权限已开启</string>
+    <string name="perm_notify_missing">✗ 未开启通知权限，倒计时通知不会显示</string>
+    <string name="btn_grant_listener">去开启通知使用权</string>
+    <string name="btn_grant_notify">去开启通知权限</string>
+    <string name="label_quick">快捷时长</string>
+    <string name="quick_5">5 分钟</string>
+    <string name="quick_10">10 分钟</string>
+    <string name="quick_15">15 分钟</string>
+    <string name="quick_30">30 分钟</string>
+    <string name="quick_60">60 分钟</string>
+    <string name="quick_120">120 分钟</string>
+    <string name="minutes_hint">30</string>
+    <string name="label_repeat">连续定时</string>
+    <string name="repeat_desc">暂停后如果又开始播放（比如按耳机线控续播），会自动再起一轮同样时长的倒计时，直到你手动取消</string>
+    <string name="invalid_duration">请输入 1 到 1440 之间的分钟数</string>
+    <string name="no_permission_toast">请先开启通知使用权，否则无法控制其它应用</string>
+    <string name="nothing_playing">已到时间，当前没有正在播放的音频</string>
+    <string name="paused_count">已暂停 %1$d 个播放中的音频</string>
+    <string name="status_waiting">已暂停，等待下次播放</string>
+    <string name="status_waiting_count">已暂停 %1$d 个音频，等待下次播放</string>
+    <string name="now_playing_none">当前没有正在播放的音频</string>
+    <string name="now_playing_count">当前正在播放：%1$d 个音频</string>
+    <string name="btn_grant_alarm">去开启精确定时</string>
+    <string name="perm_alarm_missing">未开启精确定时（可忽略，不影响倒计时准确性）</string>
+    <string name="perm_battery_ok">✓ 已加入电池优化白名单</string>
+    <string name="perm_battery_missing">✗ 未加入电池白名单，熄屏后可能被系统冻结、无法准点暂停</string>
+    <string name="btn_grant_battery">去加入电池白名单</string>
+    <string name="about">说明：本应用通过系统「媒体会话」控制其它播放器，只对注册了媒体会话的应用有效（网易云音乐、QQ 音乐、Spotify、播客等主流播放器都支持）。到点后只是暂停，不会退出或关闭对方应用。</string>
+    <string name="notif_channel_name">倒计时提醒</string>
+    <string name="notif_channel_desc">显示音频暂停倒计时</string>
+    <string name="notif_title">音频暂停倒计时</string>
+    <string name="notif_content">剩余 %1$s 后暂停所有正在播放的音频</string>
+    <string name="notif_done_title">已暂停音频</string>
+    <string name="notif_done_content">倒计时结束，已暂停所有正在播放的音频</string>
+    <string name="notif_waiting_title">已暂停，等待下次播放</string>
+    <string name="notif_waiting_content">连续定时运行中，再次播放时会重新计时。点按可取消</string>
+    <string name="notif_btn_exit">退出程序</string>
+</resources>
