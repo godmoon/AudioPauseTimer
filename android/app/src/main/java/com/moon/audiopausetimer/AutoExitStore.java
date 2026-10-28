@@ -30,6 +30,8 @@ public final class AutoExitStore {
     private static final String KEY_FIXED_MINUTE = "fixed_minute";
     private static final String KEY_TARGET_AT = "target_at";
     private static final String KEY_ENABLED = "enabled";
+    /** 本次关闭时间是否因为蓝牙任务被延后过：任务结束后要立刻补上 */
+    private static final String KEY_DEFERRED = "deferred";
 
     private AutoExitStore() {
     }
@@ -73,11 +75,25 @@ public final class AutoExitStore {
 
     /** 打开/关闭自动关闭功能（这是用户手动操作的总开关） */
     public static void setEnabled(Context context, boolean enabled) {
-        sp(context).edit().putBoolean(KEY_ENABLED, enabled).apply();
+        SharedPreferences.Editor editor = sp(context).edit().putBoolean(KEY_ENABLED, enabled);
+        if (!enabled) {
+            // 关掉开关时顺便清掉「被蓝牙任务延后」的标记，下次打开重新按配置排
+            editor.putBoolean(KEY_DEFERRED, false);
+        }
+        editor.apply();
     }
 
     public static boolean isEnabled(Context context) {
         return sp(context).getBoolean(KEY_ENABLED, false);
+    }
+
+    /** 标记本次关闭是否被蓝牙任务延后过 */
+    public static void setDeferred(Context context, boolean deferred) {
+        sp(context).edit().putBoolean(KEY_DEFERRED, deferred).apply();
+    }
+
+    public static boolean isDeferred(Context context) {
+        return sp(context).getBoolean(KEY_DEFERRED, false);
     }
 
     /**

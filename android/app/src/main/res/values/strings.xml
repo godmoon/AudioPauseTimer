@@ -27,6 +27,8 @@
     <string name="minutes_hint">30</string>
     <string name="label_repeat">连续定时</string>
     <string name="repeat_desc">暂停后如果又开始播放（比如按耳机线控续播），会自动再起一轮同样时长的倒计时，直到你手动取消</string>
+    <string name="switch_auto_start">打开应用时自动开始计时</string>
+    <string name="auto_start_desc">勾选后，下次打开应用会用上次的时长自动开始一轮倒计时；如果已经在倒计时或等待播放，则不会重复开始</string>
     <string name="invalid_duration">请输入 1 到 1440 之间的分钟数</string>
     <string name="no_permission_toast">请先开启通知使用权，否则无法控制其它应用</string>
     <string name="nothing_playing">已到时间，当前没有正在播放的音频</string>
@@ -72,4 +74,27 @@
     <string name="toast_auto_exit_on">已开启自动关闭</string>
     <string name="toast_auto_exit_off">已关闭自动关闭</string>
     <string name="invalid_hours">请输入大于 0 且不超过 720 的小时数</string>
+
+    <!-- 停止播放后自动关蓝牙 -->
+    <string name="switch_bt_task">停止播放后自动关蓝牙</string>
+    <string name="bt_task_desc">勾选后常驻生效：连续 N 分钟没有音频播放，就关闭手机蓝牙，让耳机断连后自动关机；再过 X 分钟自动重新打开蓝牙。中途恢复播放会取消本次任务；如果这期间正好到自动关闭应用的时间，关闭会延后到蓝牙任务结束之后。</string>
+    <string name="label_bt_stop">停止播放后等待（分钟）</string>
+    <string name="label_bt_off">关闭蓝牙后重新开启（分钟）</string>
+    <string name="bt_stop_hint">10</string>
+    <string name="bt_off_hint">5</string>
+    <string name="bt_off_1">1 分钟</string>
+    <string name="bt_off_3">3 分钟</string>
+    <string name="bt_off_5">5 分钟</string>
+    <string name="bt_off_10">10 分钟</string>
+    <string name="bt_status_off">已关闭，打开开关即可生效</string>
+    <string name="bt_status_idle">正在监听播放状态：停止播放 %1$d 分钟后关闭蓝牙</string>
+    <string name="bt_status_waiting">%1$s 后关闭蓝牙（中途恢复播放会自动取消）</string>
+    <string name="bt_status_off_waiting">蓝牙已关闭，%1$s 后自动重新开启</string>
+    <string name="bt_status_failed">蓝牙未由本应用关闭（本就是关闭状态或被系统拒绝），%1$s 后结束本次任务</string>
+    <string name="bt_invalid_stop">等待分钟数需在 1 到 1440 之间</string>
+    <string name="bt_invalid_off">重新开启分钟数需在 1 到 1440 之间</string>
+    <string name="bt_need_listener">请先开启通知使用权，否则无法判断有没有在播放</string>
+    <string name="bt_need_bluetooth">请先授予「附近的设备」权限（用于开关蓝牙）</string>
+    <string name="toast_bt_on">已开启：停止播放后自动关蓝牙</string>
+    <string name="toast_bt_off">已关闭蓝牙自动任务</string>
 </resources>

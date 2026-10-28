@@ -21,6 +21,19 @@ public class AutoExitReceiver extends BroadcastReceiver {
         Log.i(TAG, "自动关闭闹钟到点，准备彻底退出应用");
         // 开关本身不动：退出流程里会自动把下一次排好（固定时间排明天、几小时后重新起一轮）
 
+        // 蓝牙任务（等关蓝牙 / 等开蓝牙）进行中就先不退出：
+        // 关蓝牙后还要自动开回来，退早了任务就断了，所以把关闭时间延后到任务完全结束。
+        if (BluetoothTask.isBusy(context)) {
+            long endAt = BluetoothTask.getEstimatedEndAt(context);
+            long deferTo = Math.max(endAt + BluetoothTask.AUTO_EXIT_BUFFER_MS,
+                    System.currentTimeMillis() + 30_000L);
+            AutoExitStore.setDeferred(context, true);
+            AutoExitStore.setNextTargetAt(context, deferTo);
+            CountdownService.scheduleAutoExit(context, deferTo);
+            Log.i(TAG, "蓝牙任务进行中，自动关闭延后到时间戳=" + deferTo);
+            return;
+        }
+
         Intent exit = new Intent(context, CountdownService.class)
                 .setAction(CountdownService.ACTION_AUTO_EXIT);
         try {

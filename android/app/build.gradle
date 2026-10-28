@@ -4,12 +4,15 @@ plugins {
 
 android {
     namespace 'com.moon.audiopausetimer'
-    compileSdk 34
+    compileSdk 36
 
     defaultConfig {
         applicationId "com.moon.audiopausetimer"
         minSdk 24
-        targetSdk 34
+        // 刻意停在 32：Android 13 起，targetSdk ≥ 33 的应用调用 BluetoothAdapter.enable()/disable()
+        // 一律返回 false，「到点关蓝牙 / 再自动开蓝牙」就做不到了。
+        // 本应用是侧载安装，不需要满足 Play 的 targetSdk 要求。
+        targetSdk 32
         versionCode 1
         versionName "1.0"
     }
@@ -19,6 +22,11 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
+    }
+
+    lint {
+        // targetSdk 刻意停在 32（见上），Play 商店的上架要求对侧载安装没有意义
+        disable 'ExpiredTargetSdkVersion'
     }
 
     compileOptions {

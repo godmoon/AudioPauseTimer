@@ -10,17 +10,28 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <!-- 精确定时权限。
-         用 USE_EXACT_ALARM 而不是 SCHEDULE_EXACT_ALARM：后者需要用户去设置里手动开启，
-         而本应用是定时器类应用，符合 USE_EXACT_ALARM 的使用场景，声明即自动授予。
+         targetSdk 停在 32（为了能开关蓝牙），此时 USE_EXACT_ALARM 不生效，
+         改用 SCHEDULE_EXACT_ALARM：targetSdk < 33 的安装包默认授予，无需用户手动开启。
          锁屏后设备进 Doze、CPU 休眠，且 MIUI 会禁用第三方应用的唤醒锁，
          这时只能靠精确闹钟准时唤醒来执行暂停。 -->
-    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
 
     <!-- 到点时唤醒 CPU 执行暂停操作 -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <!-- 开机后重新排上「自动关闭应用」的闹钟（重启会清空系统里的所有闹钟） -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+    <!-- 蓝牙：关闭/开启系统蓝牙用于「停止播放后自动关蓝牙」。
+         targetSdk 停在 32，所以 Android 13+ 上 enable()/disable() 仍然可用；
+         Android 12+ 的动态权限是 BLUETOOTH_CONNECT（「附近的设备」）。 -->
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <uses-permission
+        android:name="android.permission.BLUETOOTH"
+        android:maxSdkVersion="30" />
+    <uses-permission
+        android:name="android.permission.BLUETOOTH_ADMIN"
+        android:maxSdkVersion="30" />
 
     <!-- 允许引导用户把本应用加入电池优化白名单。
          MIUI/HyperOS 的 greeze 会冻结第三方应用并禁用其唤醒锁，导致熄屏后无法准点执行暂停，
@@ -74,6 +85,11 @@
         <!-- 自动关闭闹钟的到点入口：闹钟由本应用自己创建并显式指名，不需要对外导出 -->
         <receiver
             android:name=".AutoExitReceiver"
+            android:exported="false" />
+
+        <!-- 蓝牙任务闹钟的到点入口：到点关蓝牙 / 到点开蓝牙 -->
+        <receiver
+            android:name=".BluetoothTaskReceiver"
             android:exported="false" />
 
         <!-- 开机后重排自动关闭闹钟，系统广播必须对外导出才能收到 -->

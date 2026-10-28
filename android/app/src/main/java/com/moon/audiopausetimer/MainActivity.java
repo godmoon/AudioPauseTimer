@@ -39,7 +39,9 @@ public class MainActivity extends AppCompatActivity {
     private static final String PREF_NAME = "ui_prefs";
     private static final String KEY_LAST_MINUTES = "last_minutes";
     private static final String KEY_LAST_REPEAT = "last_repeat";
+    private static final String KEY_AUTO_START = "auto_start";
     private static final int REQ_POST_NOTIFICATIONS = 1001;
+    private static final int REQ_BLUETOOTH_CONNECT = 1002;
     private static final int MIN_MINUTES = 1;
     private static final int MAX_MINUTES = 1440;
 
@@ -50,6 +52,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView tvCountdown;
     private TextView tvStatus;
     private SwitchCompat switchRepeat;
+    private SwitchCompat switchAutoStart;
 
     private TextView tvPermListener;
     private TextView btnGrantListener;
@@ -73,6 +76,16 @@ public class MainActivity extends AppCompatActivity {
     private int exitFixedHour = 23;
     private int exitFixedMinute = 0;
 
+    // ---------- 停止播放后自动关蓝牙 ----------
+    private SwitchCompat switchBtTask;
+    private View rowBtOptions;
+    private EditText etBtStop;
+    private EditText etBtOff;
+    private TextView tvBtStatus;
+
+    /** 勾选了自动开始但当时没有通知使用权：等授权回来补一次，避免用户授权后还得手动点开始 */
+    private boolean autoStartPending;
+
     /** 收到「已完成」广播后，短暂保持完成文案，避免紧接着的空闲广播把它覆盖掉 */
     private long doneUntil = 0L;
     /** 最近一次暂停的音频数量，用于「等待下次播放」状态的文案 */
@@ -87,6 +100,8 @@ public class MainActivity extends AppCompatActivity {
             refreshNowPlaying();
             // 顺带刷新自动关闭的剩余时间，让状态行实时走字
             refreshAutoExitStatus();
+            // 蓝牙任务的倒计时也要实时走
+            refreshBtStatus();
             uiHandler.postDelayed(this, 3000L);
         }
     };
@@ -127,6 +142,7 @@ public class MainActivity extends AppCompatActivity {
         tvCountdown = findViewById(R.id.tv_countdown);
         tvStatus = findViewById(R.id.tv_status);
         switchRepeat = findViewById(R.id.switch_repeat);
+        switchAutoStart = findViewById(R.id.switch_auto_start);
 
         tvPermListener = findViewById(R.id.tv_perm_listener);
         btnGrantListener = findViewById(R.id.btn_grant_listener);
@@ -143,6 +159,8 @@ public class MainActivity extends AppCompatActivity {
         setupAutoExitCard();
         // 恢复上次的自动关闭配置（含计划状态），要放在控件都绑好事件之后
         restoreAutoExitConfig();
+        // 蓝牙卡片同一套路：先绑事件，再恢复开关与 N/X
+        setupBtTaskCard();
 
         // 同一个按钮双形态：空闲时点它开始，倒计时/等待中点它取消
         btnStart.setOnClickListener(new View.OnClickListener() {
@@ -167,7 +185,38 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        // 恢复「打开应用时自动开始计时」，改动即写回存档
+        switchAutoStart.setChecked(pref.getBoolean(KEY_AUTO_START, false));
+        switchAutoStart.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                saveUiPrefs();
+            }
+        });
+
         registerTimerReceiver();
+
+        // 勾选过「自动开始」的话，这次打开就立刻起一轮（注册好广播之后再启动，才不会漏掉首个 tick）
+        maybeAutoStart();
+    }
+
+    /** 打开应用时的自动开始：只有勾选了开关、当前空闲且已授权时才启动，避免重复计时或反复弹权限框 */
+    private void maybeAutoStart() {
+        autoStartPending = false;
+        if (!switchAutoStart.isChecked()) {
+            return;
+        }
+        if (TimerStore.getMode(this) != TimerStore.MODE_IDLE) {
+            // 已经在倒计时或等待下次播放，交给 refreshTimerState 显示，不再重复开始
+            return;
+        }
+        if (!hasListenerPermission()) {
+            // 没授权时静默跳过，界面上的权限提示已经说明原因；
+            // 记一笔，等用户去系统设置授权回来后（onResume）再补一次自动开始
+            autoStartPending = true;
+            return;
+        }
+        startCountdown(true);
     }
 
     private void setupQuickChips() {
@@ -243,6 +292,14 @@ public class MainActivity extends AppCompatActivity {
     // ---------- 倒计时控制 ----------
 
     private void startCountdown() {
+        startCountdown(false);
+    }
+
+    /**
+     * @param auto true = 打开应用时的自动开始。自动开始不再弹通知权限申请，
+     *             否则每次打开应用都会被打扰，改为用户手动开始时再申请
+     */
+    private void startCountdown(boolean auto) {
         int minutes;
         try {
             minutes = Integer.parseInt(etMinutes.getText().toString().trim());
@@ -264,7 +321,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         // Android 13+ 申请通知权限，用于显示倒计时通知（不申请也能倒计时，只是看不到通知）
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+        if (!auto && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
                 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)
                 != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this,
@@ -299,6 +356,7 @@ public class MainActivity extends AppCompatActivity {
             // 输入框为空或非法时保留上次的有效值
         }
         editor.putBoolean(KEY_LAST_REPEAT, switchRepeat.isChecked());
+        editor.putBoolean(KEY_AUTO_START, switchAutoStart.isChecked());
         editor.apply();
     }
 
@@ -570,6 +628,198 @@ public class MainActivity extends AppCompatActivity {
         return formatClock(calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE));
     }
 
+    // ---------- 停止播放后自动关蓝牙 ----------
+
+    /** 绑定「停止播放后自动关蓝牙」卡片的交互 */
+    private void setupBtTaskCard() {
+        switchBtTask = findViewById(R.id.switch_bt_task);
+        rowBtOptions = findViewById(R.id.row_bt_options);
+        etBtStop = findViewById(R.id.et_bt_stop);
+        etBtOff = findViewById(R.id.et_bt_off);
+        tvBtStatus = findViewById(R.id.tv_bt_status);
+
+        int[] stopIds = {R.id.btn_bt_stop_5, R.id.btn_bt_stop_10,
+                R.id.btn_bt_stop_15, R.id.btn_bt_stop_30};
+        final int[] stopValues = {5, 10, 15, 30};
+        for (int i = 0; i < stopIds.length; i++) {
+            final int minutes = stopValues[i];
+            findViewById(stopIds[i]).setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    etBtStop.setText(String.valueOf(minutes));
+                }
+            });
+        }
+
+        int[] offIds = {R.id.btn_bt_off_1, R.id.btn_bt_off_3,
+                R.id.btn_bt_off_5, R.id.btn_bt_off_10};
+        final int[] offValues = {1, 3, 5, 10};
+        for (int i = 0; i < offIds.length; i++) {
+            final int minutes = offValues[i];
+            findViewById(offIds[i]).setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    etBtOff.setText(String.valueOf(minutes));
+                }
+            });
+        }
+
+        // 边改边生效：时长变动后按当前阶段的起点重排闹钟
+        android.text.TextWatcher watcher = new android.text.TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
+
+            @Override
+            public void afterTextChanged(android.text.Editable s) {
+                saveBtConfig();
+                BluetoothTask.onConfigChanged(MainActivity.this);
+                refreshBtStatus();
+            }
+        };
+        etBtStop.addTextChangedListener(watcher);
+        etBtOff.addTextChangedListener(watcher);
+
+        switchBtTask.setOnCheckedChangeListener(btSwitchListener);
+        restoreBtConfig();
+    }
+
+    /** 恢复上次的开关与 N/X */
+    private void restoreBtConfig() {
+        etBtStop.setText(String.valueOf(BluetoothStore.getStopMinutes(this)));
+        etBtOff.setText(String.valueOf(BluetoothStore.getOffMinutes(this)));
+        switchBtTask.setOnCheckedChangeListener(null);
+        switchBtTask.setChecked(BluetoothStore.isEnabled(this));
+        switchBtTask.setOnCheckedChangeListener(btSwitchListener);
+        applyBtUi();
+        refreshBtStatus();
+    }
+
+    private final CompoundButton.OnCheckedChangeListener btSwitchListener =
+            new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    if (isChecked) {
+                        if (!isBtMinutesValid(etBtStop, R.string.bt_invalid_stop)
+                                || !isBtMinutesValid(etBtOff, R.string.bt_invalid_off)) {
+                            revertBtSwitch();
+                            return;
+                        }
+                        if (!hasListenerPermission()) {
+                            // 没有通知使用权就判断不了是否还在播放，整个功能无从谈起
+                            revertBtSwitch();
+                            Toast.makeText(MainActivity.this, R.string.bt_need_listener,
+                                    Toast.LENGTH_LONG).show();
+                            return;
+                        }
+                        if (!BluetoothTask.hasBluetoothPermission(MainActivity.this)) {
+                            // Android 12+ 的「附近的设备」权限，开关蓝牙必需
+                            revertBtSwitch();
+                            ActivityCompat.requestPermissions(MainActivity.this,
+                                    new String[]{Manifest.permission.BLUETOOTH_CONNECT},
+                                    REQ_BLUETOOTH_CONNECT);
+                            Toast.makeText(MainActivity.this, R.string.bt_need_bluetooth,
+                                    Toast.LENGTH_LONG).show();
+                            return;
+                        }
+                        saveBtConfig();
+                        BluetoothStore.setEnabled(MainActivity.this, true);
+                        // 如果现在就没在播放，从这一刻开始算 N 分钟
+                        BluetoothTask.onPlaybackMaybeChanged(MainActivity.this);
+                        Toast.makeText(MainActivity.this, R.string.toast_bt_on,
+                                Toast.LENGTH_SHORT).show();
+                    } else {
+                        saveBtConfig();
+                        BluetoothStore.setEnabled(MainActivity.this, false);
+                        BluetoothTask.onFeatureDisabled(MainActivity.this);
+                        Toast.makeText(MainActivity.this, R.string.toast_bt_off,
+                                Toast.LENGTH_SHORT).show();
+                    }
+                    applyBtUi();
+                    refreshBtStatus();
+                }
+            };
+
+    /** 校验失败时把开关回弹，先摘监听避免递归触发一次「已关闭」 */
+    private void revertBtSwitch() {
+        switchBtTask.setOnCheckedChangeListener(null);
+        switchBtTask.setChecked(false);
+        switchBtTask.setOnCheckedChangeListener(btSwitchListener);
+        applyBtUi();
+        refreshBtStatus();
+    }
+
+    /** 分钟数是否在 1~1440 之间；不合法时弹一次提示 */
+    private boolean isBtMinutesValid(EditText editText, int messageRes) {
+        try {
+            int value = Integer.parseInt(editText.getText().toString().trim());
+            if (value >= BluetoothStore.MIN_MINUTES && value <= BluetoothStore.MAX_MINUTES) {
+                return true;
+            }
+        } catch (NumberFormatException ignored) {
+        }
+        Toast.makeText(this, messageRes, Toast.LENGTH_SHORT).show();
+        return false;
+    }
+
+    /** 保存 N/X，输入框为空或非法时保留上次的有效值 */
+    private void saveBtConfig() {
+        BluetoothStore.saveConfig(this,
+                parseBtMinutes(etBtStop, BluetoothStore.getStopMinutes(this)),
+                parseBtMinutes(etBtOff, BluetoothStore.getOffMinutes(this)));
+    }
+
+    private int parseBtMinutes(EditText editText, int fallback) {
+        try {
+            int value = Integer.parseInt(editText.getText().toString().trim());
+            if (value >= BluetoothStore.MIN_MINUTES && value <= BluetoothStore.MAX_MINUTES) {
+                return value;
+            }
+        } catch (NumberFormatException ignored) {
+        }
+        return fallback;
+    }
+
+    /** 状态行：关闭 / 监听中 / 等待关蓝牙 / 等待开蓝牙，由 3 秒轮询实时刷新 */
+    private void refreshBtStatus() {
+        if (tvBtStatus == null) {
+            return;
+        }
+        if (!BluetoothStore.isEnabled(this)) {
+            tvBtStatus.setText(R.string.bt_status_off);
+            tvBtStatus.setTextColor(getColor(R.color.text_secondary));
+            return;
+        }
+        int state = BluetoothStore.getState(this);
+        long leftSecs = Math.max(0L,
+                (BluetoothStore.getTargetAt(this) - System.currentTimeMillis() + 999) / 1000);
+        if (state == BluetoothStore.STATE_WAITING) {
+            tvBtStatus.setText(getString(R.string.bt_status_waiting, TimerStore.format(leftSecs)));
+            tvBtStatus.setTextColor(getColor(R.color.ok));
+        } else if (state == BluetoothStore.STATE_OFF) {
+            if (BluetoothStore.isTurnedOffByUs(this)) {
+                tvBtStatus.setText(getString(R.string.bt_status_off_waiting, TimerStore.format(leftSecs)));
+                tvBtStatus.setTextColor(getColor(R.color.ok));
+            } else {
+                // 蓝牙本来就是关的，或被系统拒绝关闭：任务照常计时，但不会替用户开蓝牙
+                tvBtStatus.setText(getString(R.string.bt_status_failed, TimerStore.format(leftSecs)));
+                tvBtStatus.setTextColor(getColor(R.color.warn));
+            }
+        } else {
+            tvBtStatus.setText(getString(R.string.bt_status_idle, BluetoothStore.getStopMinutes(this)));
+            tvBtStatus.setTextColor(getColor(R.color.text_secondary));
+        }
+    }
+
+    /** 开关关着时收起 N/X 输入区，和「自动关闭应用」卡片保持一致 */
+    private void applyBtUi() {
+        rowBtOptions.setVisibility(switchBtTask.isChecked() ? View.VISIBLE : View.GONE);
+    }
+
     // ---------- 界面状态 ----------
 
     /**
@@ -765,6 +1015,14 @@ public class MainActivity extends AppCompatActivity {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == REQ_POST_NOTIFICATIONS) {
             refreshPermissionUi();
+        } else if (requestCode == REQ_BLUETOOTH_CONNECT) {
+            boolean granted = grantResults.length > 0
+                    && grantResults[0] == PackageManager.PERMISSION_GRANTED;
+            if (granted && !switchBtTask.isChecked()) {
+                // 授权成功就顺手把开关打开，用户不用再点一次
+                switchBtTask.setChecked(true);
+            }
+            refreshBtStatus();
         }
     }
 
@@ -787,8 +1045,17 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
         refreshPermissionUi();
         refreshTimerState();
+        // 授权回来后补一次自动开始（只针对打开应用时因缺权限没能启动的那一次）
+        if (autoStartPending && TimerStore.getMode(this) == TimerStore.MODE_IDLE
+                && hasListenerPermission()) {
+            autoStartPending = false;
+            startCountdown(true);
+        }
         rearmAutoExitAlarm();
         refreshAutoExitStatus();
+        // 蓝牙任务的闹钟也可能因重启/系统清理丢失，回来时补一次（幂等，不会改动目标时间）
+        BluetoothTask.rearm(this);
+        refreshBtStatus();
         uiHandler.removeCallbacks(nowPlayingRunnable);
         uiHandler.post(nowPlayingRunnable);
     }
@@ -807,6 +1074,7 @@ public class MainActivity extends AppCompatActivity {
         // 离开界面时把当前设置存下来，下次打开可恢复
         saveUiPrefs();
         saveAutoExitConfig();
+        saveBtConfig();
         uiHandler.removeCallbacksAndMessages(null);
     }
 

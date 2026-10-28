@@ -125,6 +125,24 @@
                 android:textColor="@color/text_secondary"
                 android:textSize="12sp" />
 
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/switch_auto_start"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:checked="false"
+                android:minHeight="32dp"
+                android:text="@string/switch_auto_start"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/auto_start_desc"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp" />
+
             <TextView
                 android:id="@+id/btn_start"
                 android:layout_width="match_parent"
@@ -327,6 +345,160 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
                 android:text="@string/auto_exit_status_off"
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp" />
+        </LinearLayout>
+
+        <!-- 卡片：停止播放后自动关蓝牙 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:background="@drawable/bg_card"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <!-- 总开关：打开后常驻生效，关掉即撤销任务 -->
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/switch_bt_task"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:checked="false"
+                android:minHeight="36dp"
+                android:text="@string/switch_bt_task"
+                android:textColor="@color/text_primary"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:lineSpacingExtra="2dp"
+                android:text="@string/bt_task_desc"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp" />
+
+            <LinearLayout
+                android:id="@+id/row_bt_options"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/label_bt_stop"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="13sp" />
+
+                <EditText
+                    android:id="@+id/et_bt_stop"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:background="@drawable/bg_chip"
+                    android:hint="@string/bt_stop_hint"
+                    android:inputType="number"
+                    android:padding="12dp"
+                    android:singleLine="true"
+                    android:textColor="@color/text_primary"
+                    android:textColorHint="@color/text_secondary"
+                    android:textSize="16sp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:baselineAligned="false"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/btn_bt_stop_5"
+                        style="@style/ChipButton"
+                        android:layout_marginEnd="4dp"
+                        android:text="@string/quick_5" />
+
+                    <TextView
+                        android:id="@+id/btn_bt_stop_10"
+                        style="@style/ChipButton"
+                        android:layout_marginEnd="4dp"
+                        android:text="@string/quick_10" />
+
+                    <TextView
+                        android:id="@+id/btn_bt_stop_15"
+                        style="@style/ChipButton"
+                        android:layout_marginEnd="4dp"
+                        android:text="@string/quick_15" />
+
+                    <TextView
+                        android:id="@+id/btn_bt_stop_30"
+                        style="@style/ChipButton"
+                        android:text="@string/quick_30" />
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/label_bt_off"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="13sp" />
+
+                <EditText
+                    android:id="@+id/et_bt_off"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:background="@drawable/bg_chip"
+                    android:hint="@string/bt_off_hint"
+                    android:inputType="number"
+                    android:padding="12dp"
+                    android:singleLine="true"
+                    android:textColor="@color/text_primary"
+                    android:textColorHint="@color/text_secondary"
+                    android:textSize="16sp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:baselineAligned="false"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/btn_bt_off_1"
+                        style="@style/ChipButton"
+                        android:layout_marginEnd="4dp"
+                        android:text="@string/bt_off_1" />
+
+                    <TextView
+                        android:id="@+id/btn_bt_off_3"
+                        style="@style/ChipButton"
+                        android:layout_marginEnd="4dp"
+                        android:text="@string/bt_off_3" />
+
+                    <TextView
+                        android:id="@+id/btn_bt_off_5"
+                        style="@style/ChipButton"
+                        android:layout_marginEnd="4dp"
+                        android:text="@string/bt_off_5" />
+
+                    <TextView
+                        android:id="@+id/btn_bt_off_10"
+                        style="@style/ChipButton"
+                        android:text="@string/bt_off_10" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/tv_bt_status"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="@string/bt_status_off"
                 android:textColor="@color/text_secondary"
                 android:textSize="13sp" />
         </LinearLayout>

@@ -338,6 +338,7 @@ public class CountdownService extends Service {
         TimerStore.clear(this);
         // 关掉自己之前先把下一次排上：固定时间落到明天同一刻、几小时后重新起一轮。
         // 开关是常开的，执行本身不动它，除非用户手动关掉。
+        AutoExitStore.setDeferred(this, false);
         scheduleNextAutoExit(this);
         sendTick(0L, TimerStore.MODE_IDLE);
         // 先告诉界面「要退出了」，让它在进程结束前先 finish，避免界面被硬杀
@@ -374,6 +375,7 @@ public class CountdownService extends Service {
         cancelAlarmOf(app);
         TimerStore.clear(app);
         // 同样要在结束进程前把下一次排好，否则循环到这就断了
+        AutoExitStore.setDeferred(app, false);
         scheduleNextAutoExit(app);
         NotificationManager manager = (NotificationManager) app.getSystemService(Context.NOTIFICATION_SERVICE);
         if (manager != null) {
@@ -622,6 +624,21 @@ public class CountdownService extends Service {
             return;
         }
         alarmManager.cancel(autoExitPendingIntent(app));
+    }
+
+    /**
+     * 直接排到指定时刻（用于「被蓝牙任务延后」的场景）：不改配置，只把这一次推迟。
+     * 到点后照常执行，执行完再按配置滚动到下一次。
+     */
+    public static void scheduleAutoExitAt(Context context, long targetAt) {
+        Context app = context.getApplicationContext();
+        if (!AutoExitStore.isEnabled(app)) {
+            cancelAutoExit(app);
+            return;
+        }
+        AutoExitStore.setNextTargetAt(app, targetAt);
+        scheduleAutoExit(app, targetAt);
+        Log.i(TAG, "自动关闭已延后到时间戳=" + targetAt);
     }
 
     /**
